@@ -43,10 +43,14 @@ def handle_existing_file(output_path: Path) -> Path | None:
 @click.option('--font', help='Font family to use for text')
 @click.option('--no-crop', is_flag=True, help='Disable automatic cropping to 1920x1080')
 @click.option('--transparency', type=int, default=20, help='Transparency percentage (0-100) for the overlay bar')
+@click.option('--blur', type=int, default=0,
+              help='Blur amount percentage (0-100) for the background')
+@click.option('--blur-radius', type=int, default=3,
+              help='Blur radius in pixels (default: 5)')
 @click.option('--debug', is_flag=True, help='Enable debug output')
 @click.argument('images', nargs=-1, type=click.Path(exists=True, dir_okay=False), required=True)
 def main(logo: str | None, text: str | None, font: str | None, no_crop: bool,
-         transparency: int, debug: bool, images: tuple[str, ...]) -> None:
+         transparency: int, blur: int, blur_radius: int, debug: bool, images: tuple[str, ...]) -> None:
     """Add logo and text overlay to images, optimized for video conferencing backgrounds."""
 
     # Set debug mode from either flag or environment variable
@@ -56,6 +60,14 @@ def main(logo: str | None, text: str | None, font: str | None, no_crop: bool,
     # Validate transparency
     if not 0 <= transparency <= 100:
         click.echo("Error: Transparency must be between 0 and 100", err=True)
+        sys.exit(1)
+
+    # Validate blur parameters
+    if not 0 <= blur <= 100:
+        click.echo("Error: Blur amount must be between 0 and 100", err=True)
+        sys.exit(1)
+    if blur_radius < 1:
+        click.echo("Error: Blur radius must be at least 1", err=True)
         sys.exit(1)
 
     for image_path in images:
@@ -75,8 +87,11 @@ def main(logo: str | None, text: str | None, font: str | None, no_crop: bool,
                 text=text,
                 font_name=font,
                 crop_to_hd=not no_crop,
-                transparency=transparency
+                transparency=transparency,
+                blur=blur,
+                blur_radius=blur_radius
             )
+
             click.echo(f"Processed {image_path} -> {output_path}")
         except Exception as e:
             click.echo(f"Error processing {image_path}: {str(e)}", err=True)

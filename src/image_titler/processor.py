@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from typing import Optional
 import sys
 import os
@@ -13,6 +13,7 @@ class ImageProcessor:
     TARGET_HEIGHT = 1080
     OVERLAY_HEIGHT_RATIO = 0.1  # 10% of height
     MARGIN_RATIO = 0.1  # 10% of overlay height
+    DEFAULT_BLUR_RADIUS = 5
 
     def __init__(self, input_path: Path, crop_to_hd: bool = True):
         try:
@@ -153,7 +154,9 @@ class ImageProcessor:
         logo_path: Optional[Path] = None,
         text: Optional[str] = None,
         font_name: Optional[str] = None,
-        transparency: int = 20
+        transparency: int = 20,
+        blur: int = 0,  # 0-100%
+        blur_radius: int = DEFAULT_BLUR_RADIUS
     ) -> None:
         try:
             if self.input_image.mode != 'RGB':
@@ -161,6 +164,9 @@ class ImageProcessor:
 
             if self.crop_to_hd:
                 self.input_image = self._resize_and_crop()
+
+            if blur > 0:
+                self._apply_blur(blur, blur_radius)
 
             self._add_overlay_bar(transparency)
 
@@ -179,6 +185,39 @@ class ImageProcessor:
             self.input_image.save(output_path)
         except Exception as e:
             raise RuntimeError(f"Image processing failed: {str(e)}")
+
+    def _apply_blur(self, blur_amount: int, radius: int) -> None:
+        """Apply gaussian blur as an overlay with specified opacity."""
+        # Create a blurred version of the image
+        blurred = self.input_image.copy()
+        blurred = blurred.filter(ImageFilter.GaussianBlur(radius=radius))
+
+        # Convert both images to RGBA if needed
+        if self.input_image.mode != 'RGBA':
+            self.input_image = self.input_image.convert('RGBA')
+        if blurred.mode != 'RGBA':
+            blurred = blurred.convert('RGBA')
+
+        # Calculate opacity for the blur layer
+        opacity = int(255 * (blur_amount / 100))
+
+        # Create a new image with the same size and mode
+        result = Image.new('RGBA', self.input_image.size)
+
+        # Paste the original image
+        result.paste(self.input_image, (0, 0))
+
+        # Apply the blurred image with specified opacity
+        blurred.putalpha(opacity)
+        result = Image.alpha_composite(result, blurred)
+
+        self.input_image = result
+
+        debug = os.environ.get("IMAGE_TITLER_DEBUG") == "1"
+        if debug:
+            print("\nBlur settings:")
+            print(f"Blur amount: {blur_amount}%")
+            print(f"Blur radius: {radius}px")
 
     def _resize_and_crop(self) -> Image.Image:
         # Calculate dimensions to maintain aspect ratio
@@ -352,7 +391,9 @@ def process_image(
     text: Optional[str] = None,
     font_name: Optional[str] = None,
     crop_to_hd: bool = True,
-    transparency: int = 20  # Add this parameter
+    transparency: int = 20,
+    blur: int = 0,
+    blur_radius: int = ImageProcessor.DEFAULT_BLUR_RADIUS
 ) -> None:
     processor = ImageProcessor(input_path, crop_to_hd)
-    processor.process(output_path, logo_path, text, font_name, transparency)
+    processor.process(output_path, logo_path, text, font_name, transparency, blur, blur_radius)

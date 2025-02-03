@@ -169,3 +169,33 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Test/Example images
+# Uncomment if you want to exclude test images
+#test_images/
+#examples/
+#*.jpg
+#*.jpeg
+#*.png
+#*.gif
+
+# Editor specific (already has PyCharm via JetBrains template)
+.vscode/
+*.swp
+*.swo
+*~
+
+# Uncomment if needed
+#test_images/
+#examples/
+#*.jpg
+#*.jpeg
+#*.png
+#*.gif

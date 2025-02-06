@@ -168,7 +168,8 @@ class ImageProcessor:
             if blur > 0:
                 self._apply_blur(blur, blur_radius)
 
-            self._add_overlay_bar(transparency)
+            if logo_path or text:
+                self._add_overlay_bar(transparency)
 
             if logo_path:
                 try:

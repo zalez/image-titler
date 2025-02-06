@@ -5,6 +5,7 @@ A Python CLI utility for adding logos and text overlays to images, optimized for
 ## Features
 
 - Resize and crop input images to 1920x1080 (Full HD)
+- Configurable blurring of the background (amount and radius)
 - Add a semi-transparent white bar at the top
 - Place a logo on the left side
 - Add right-aligned text
@@ -44,6 +45,8 @@ image-titler --help
 - `--text TEXT`: Text to overlay on the image
 - `--font FONT`: Font family to use (defaults to Arial)
 - `--transparency INT`: Transparency percentage for the overlay bar (0-100, default: 20)
+- `--blur INT`: Blur amount (0-100%)
+- `--blur-radius INT`: Blur radius (default: 5)
 - `--no-crop`: Disable automatic cropping to 1920x1080
 - `--debug`: Enable debug output
 - Multiple image paths can be provided as arguments
@@ -62,6 +65,7 @@ If an output file already exists, you'll be prompted to:
 ## Design Principles
 
 - Images are cropped and resized to 1920x1080 while maintaining aspect ratio
+- Blurring is applied by applying an extra layer of the blurred image at configurable opacity
 - A semi-transparent white bar (10% of image height) is added at the top
 - The logo is scaled to fit within the bar height (with 10% margins)
 - Text is right-aligned and sized to:
